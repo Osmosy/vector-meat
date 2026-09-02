@@ -1,0 +1,358 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Vector Meat — мясоперерабатывающий завод",
+    "output": "docs/vector-meat.architecture.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "production-chain",
+        "label": "Производственная цепочка",
+        "focus": [
+          "raw",
+          "reception",
+          "processing",
+          "thermal",
+          "packing",
+          "mercury"
+        ],
+        "note": "От полутуш до маркировки: ключевые точки контроля с ИИ-ролями."
+      },
+      {
+        "id": "roles",
+        "label": "13 виртуальных работников",
+        "focus": [
+          "director",
+          "hermes",
+          "roles",
+          "worker"
+        ],
+        "note": "Каждый работник = роль Cowork с навыками; готовит — человек утверждает."
+      },
+      {
+        "id": "compliance",
+        "label": "Регуляторика",
+        "focus": [
+          "mercury",
+          "haccp"
+        ],
+        "note": "Меркурий (эВСД), Честный Знак, ХАССП — точки, где ошибки останавливают завод."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "raw",
+      "type": "external",
+      "label": "Сырьё",
+      "sublabel": "полутуши / отрубы",
+      "pos": [
+        50,
+        300
+      ],
+      "size": [
+        120,
+        64
+      ]
+    },
+    {
+      "id": "reception",
+      "type": "backend",
+      "label": "Приёмка",
+      "sublabel": "снабжение · закупки",
+      "pos": [
+        220,
+        300
+      ],
+      "size": [
+        140,
+        64
+      ]
+    },
+    {
+      "id": "processing",
+      "type": "backend",
+      "label": "Обвалка → жиловка → посол",
+      "sublabel": "главный технолог",
+      "pos": [
+        410,
+        300
+      ],
+      "size": [
+        200,
+        64
+      ]
+    },
+    {
+      "id": "thermal",
+      "type": "backend",
+      "label": "Формовка → термо → охлаждение",
+      "sublabel": "главный инженер",
+      "pos": [
+        660,
+        300
+      ],
+      "size": [
+        220,
+        64
+      ]
+    },
+    {
+      "id": "packing",
+      "type": "backend",
+      "label": "Фасовка → упаковка",
+      "sublabel": "технолог-упаковщик",
+      "pos": [
+        910,
+        300
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "mercury",
+      "type": "security",
+      "label": "Меркурий / ЧЗ",
+      "sublabel": "эВСД · маркировка",
+      "pos": [
+        1140,
+        300
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "haccp",
+      "type": "security",
+      "label": "ХАССП / ОТК",
+      "sublabel": "микробиолог",
+      "pos": [
+        660,
+        480
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "director",
+      "type": "external",
+      "label": "Директор завода",
+      "sublabel": "утверждает решения",
+      "pos": [
+        60,
+        100
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "hermes",
+      "type": "backend",
+      "label": "Hermes Agent",
+      "sublabel": "13 ролей Cowork",
+      "pos": [
+        320,
+        100
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "roles",
+      "type": "database",
+      "label": "Навыки",
+      "sublabel": "Vector Work: 212",
+      "pos": [
+        560,
+        100
+      ],
+      "size": [
+        140,
+        64
+      ]
+    },
+    {
+      "id": "accounting",
+      "type": "backend",
+      "label": "Учёт и аналитика",
+      "sublabel": "бухгалтер · аналитик",
+      "pos": [
+        910,
+        480
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "worker",
+      "type": "external",
+      "label": "Работник цеха",
+      "sublabel": "утверждает / выполняет",
+      "pos": [
+        1140,
+        480
+      ],
+      "size": [
+        170,
+        64
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "raw",
+      "to": "reception",
+      "label": "партия"
+    },
+    {
+      "from": "reception",
+      "to": "processing",
+      "label": "в цех"
+    },
+    {
+      "from": "processing",
+      "to": "thermal",
+      "label": "фарши"
+    },
+    {
+      "from": "thermal",
+      "to": "packing",
+      "label": "готовый продукт",
+      "labelAt": [
+        860,
+        382
+      ]
+    },
+    {
+      "from": "packing",
+      "to": "mercury",
+      "label": "эВСД + КМ",
+      "variant": "security",
+      "labelAt": [
+        1120,
+        382
+      ]
+    },
+    {
+      "from": "processing",
+      "to": "haccp",
+      "label": "контроль",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "via": [
+        [
+          510,
+          420
+        ],
+        [
+          735,
+          420
+        ]
+      ]
+    },
+    {
+      "from": "thermal",
+      "to": "haccp",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "via": [
+        [
+          770,
+          430
+        ],
+        [
+          770,
+          440
+        ],
+        [
+          735,
+          440
+        ]
+      ]
+    },
+    {
+      "from": "packing",
+      "to": "accounting",
+      "label": "факт",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "haccp",
+      "to": "accounting",
+      "label": "журналы"
+    },
+    {
+      "from": "accounting",
+      "to": "worker",
+      "label": "задания / план",
+      "labelAt": [
+        1105,
+        562
+      ]
+    },
+    {
+      "from": "director",
+      "to": "hermes",
+      "label": "задача"
+    },
+    {
+      "from": "hermes",
+      "to": "roles",
+      "label": "делегирование"
+    },
+    {
+      "from": "hermes",
+      "to": "reception",
+      "label": "прикладные роли",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "via": [
+        [
+          395,
+          240
+        ],
+        [
+          290,
+          240
+        ]
+      ],
+      "labelAt": [
+        420,
+        236
+      ]
+    },
+    {
+      "from": "mercury",
+      "to": "worker",
+      "label": "выпуск в оборот",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Принципы завода",
+      "items": [
+        "Виртуальный работник готовит → человек утверждает (ИИ не подписывает госсистемы)",
+        "Данные локально: ни одна рецептура не уходит в облако",
+        "Метрика у каждого процесса — без baseline ИИ не внедряется",
+        "Сначала Меркурий и микробиолог: ошибки здесь = остановка завода"
+      ]
+    }
+  ]
+}
