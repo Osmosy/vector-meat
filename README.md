@@ -4,6 +4,8 @@
 
 # Vector Meat
 
+[![Architecture: live](https://img.shields.io/badge/Architecture-live_diagram-4f8ff7.svg)](https://osmosy.github.io/vector-meat/docs/vector-meat.architecture.html)
+
 **Мясоперерабатывающий завод — хаб процессов, работников и ИИ-трансформации**
 
 [![Hermes Agent](https://img.shields.io/badge/Hermes-Agent-blue.svg)](https://github.com/NousResearch/hermes-agent)
