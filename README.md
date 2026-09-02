@@ -7,6 +7,7 @@
 **Мясоперерабатывающий завод — хаб процессов, работников и ИИ-трансформации**
 
 [![Hermes Agent](https://img.shields.io/badge/Hermes-Agent-blue.svg)](https://github.com/NousResearch/hermes-agent)
+[![Ecosystem: Vector](https://img.shields.io/badge/Ecosystem-Vector-blue.svg)](https://osmosy.github.io/)
 [![Workers: 13](https://img.shields.io/badge/Workers-13-green.svg)](docs/staffing-v1.md)
 [![AI Stages: 5](https://img.shields.io/badge/AI%20Stages-5-orange.svg)](docs/ai-implementation-plan.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
