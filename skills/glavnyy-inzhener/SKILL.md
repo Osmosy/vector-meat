@@ -24,6 +24,7 @@ metadata:
 ## Инструменты и skills
 
 - vector-meat-stack-v1 — для инфраструктурных компонентов
+- skills/simulyatory-oborudovaniya — интерактивный 3D-разбор узлов оборудования: обучение смены, последовательность ТО, разбор инцидента
 - cowork-roles/engineering/incident-response — протокол аварий
 - cowork-roles/engineering/system-design — схемы оборудования
 - cowork-roles/engineering/debug — диагностика неисправностей

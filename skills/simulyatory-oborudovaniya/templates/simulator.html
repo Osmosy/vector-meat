@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Клипсатор — разбор узла</title>
+<style>
+  :root{--bg:#0b1016;--ink:#e8eef6;--mute:#7f8ea3;--acc:#4aa3ff;--acc2:#7bd1ff;--line:#1c2733}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+    font:13px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace}
+  #stage{position:fixed;inset:0}
+  .panel{position:fixed;background:rgba(10,16,22,.82);border:1px solid var(--line);
+    border-radius:10px;padding:12px 14px;backdrop-filter:blur(6px)}
+  #readout{left:18px;top:18px;width:250px}
+  #readout h1{margin:0 0 2px;font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+  #readout .sub{color:var(--mute);font-size:11px;margin-bottom:10px}
+  .row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #16202b}
+  .row:last-child{border-bottom:0}
+  .row b{color:var(--acc2);font-weight:600}
+  #controls{left:18px;bottom:18px;width:250px}
+  input[type=range]{width:100%;accent-color:var(--acc)}
+  button{background:#121c26;color:var(--ink);border:1px solid #24313f;border-radius:7px;
+    padding:6px 9px;font:inherit;cursor:pointer;margin:4px 4px 0 0}
+  button.on{border-color:var(--acc);color:var(--acc2)}
+  #note{right:18px;bottom:18px;width:260px;color:var(--mute);font-size:11px}
+  #note b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+
+<div class="panel" id="readout">
+  <h1>Клипсатор КН-3</h1>
+  <div class="sub">разбор узла зажима · модель, не измерение</div>
+  <div class="row"><span>ход штока</span><b id="v-stroke">0 мм</b></div>
+  <div class="row"><span>раскрытие пуансонов</span><b id="v-gap">12,0 мм</b></div>
+  <div class="row"><span>усилие на клипсе</span><b id="v-force">0,0 кН</b></div>
+  <div class="row"><span>фаза</span><b id="v-phase">холостой ход</b></div>
+  <div class="row"><span>циклов</span><b id="v-cycle">0</b></div>
+</div>
+
+<div class="panel" id="controls">
+  <input id="u" type="range" min="0" max="1" step="0.001" value="0">
+  <div>
+    <button id="cut">разрез</button>
+    <button id="explode">разнести</button>
+    <button id="auto">авто</button>
+  </div>
+</div>
+
+<div class="panel" id="note">
+  <b>Безопасность.</b> Модель показывает устройство, а не разрешает вмешательство.
+  Перед снятием давления — аварийный стоп и блокировка. Параметр один: ход штока 0…40 мм
+  (паспортное значение), всё остальное считается из него.
+</div>
+
+<script type="importmap">
+{"imports":{"three":"https://unpkg.com/three@0.186.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- паспортные числа: единственный источник ----------
+const SPEC = {
+  strokeMm: 40,      // ход штока, паспорт
+  gapOpenMm: 12,     // раскрытие пуансонов в покое
+  forceMaxKn: 2.4,   // усилие зажима по кривой привода
+  cycleSec: 1.8,     // длительность цикла
+};
+
+// ---------- один параметр u: 0..1 ----------
+function pose(u){
+  const strokeMm = u * SPEC.strokeMm;
+  const close = u <= 0.45 ? 0 : (u - 0.45) / 0.55;   // пуансоны идут на рабочем ходу
+  const gapMm = SPEC.gapOpenMm * (1 - close);
+  const forceKn = u <= 0.45 ? 0 : SPEC.forceMaxKn * Math.min(1, close * close * 1.15);
+  const phase = u <= 0.45 ? 'холостой ход' : (close < 0.98 ? 'зажим' : 'клипса закрыта');
+  return { strokeMm, close, gapMm, forceKn, phase };
+}
+
+// ---------- сцена ----------
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0b1016);
+scene.fog = new THREE.Fog(0x0b1016, 2.2, 4.4);
+
+const camera = new THREE.PerspectiveCamera(34, innerWidth/innerHeight, .01, 30);
+const CAM = new THREE.Vector3(.62, .46, .92);
+const LOOK = new THREE.Vector3(0, .20, 0);
+camera.position.copy(CAM);
+camera.lookAt(LOOK);
+
+scene.add(new THREE.HemisphereLight(0xbdd8ff, 0x0a1017, .9));
+const key = new THREE.DirectionalLight(0xffffff, 1.6); key.position.set(.9, 1.4, .7); scene.add(key);
+const rim = new THREE.DirectionalLight(0x4aa3ff, 1.0); rim.position.set(-.8, .5, -.8); scene.add(rim);
+
+const grid = new THREE.GridHelper(2.4, 24, 0x1c2733, 0x131c26);
+grid.position.y = -.001; scene.add(grid);
+
+const steel = new THREE.MeshStandardMaterial({color:0x8f9db0, metalness:.85, roughness:.35});
+const dark  = new THREE.MeshStandardMaterial({color:0x33404f, metalness:.6, roughness:.55});
+const blue  = new THREE.MeshStandardMaterial({color:0x2f6fb8, metalness:.4, roughness:.45,
+  emissive:0x0d2b4a, emissiveIntensity:.8});
+const wire  = new THREE.LineBasicMaterial({color:0x4aa3ff, transparent:true, opacity:.32});
+
+function part(geo, mat, name){
+  const m = new THREE.Mesh(geo, mat);
+  m.name = name || '';
+  m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 28), wire));
+  return m;
+}
+
+// станина: 460 × 300 мм, плита 50 мм
+const WORK = .19;                     // центр зоны зажима
+const base = part(new THREE.BoxGeometry(.46, .05, .30), dark, 'станина');
+base.position.y = .025;
+
+// колонна: 100 × 250 мм, сзади
+const column = part(new THREE.BoxGeometry(.10, .25, .10), dark, 'колонна');
+column.position.set(0, .175, -.11);
+
+// гидроцилиндр: Ø90, ход 40 мм
+const cylBody = part(new THREE.CylinderGeometry(.045, .045, .13, 24), steel, 'гидроцилиндр');
+cylBody.position.set(0, .365, -.11);
+
+// шток и траверса
+const ram = part(new THREE.CylinderGeometry(.016, .016, .12, 16), steel, 'шток');
+const crosshead = part(new THREE.BoxGeometry(.24, .04, .14), steel, 'траверса');
+
+// пуансоны с бойками
+const jawL = part(new THREE.BoxGeometry(.045, .10, .07), blue, 'пуансон левый');
+const jawR = part(new THREE.BoxGeometry(.045, .10, .07), blue, 'пуансон правый');
+const dieL = part(new THREE.BoxGeometry(.012, .034, .07), steel, 'бойк левый');
+const dieR = part(new THREE.BoxGeometry(.012, .034, .07), steel, 'бойк правый');
+
+// оболочка (рукав), проходящая через зону зажима
+const sleeve = part(new THREE.CylinderGeometry(.012, .012, .26, 16), dark, 'оболочка');
+sleeve.position.set(0, .18, 0);
+
+// клипса в зоне зажима
+const clip = new THREE.Group();
+const bar = .030, th = .006;
+[[0, 0, bar, th], [0, -bar, bar, th], [-bar/2, -bar/2, th, bar]].forEach(([x, y, w, h]) => {
+  const q = part(new THREE.BoxGeometry(w, h, .028), blue, 'клипса');
+  q.position.set(x, y, 0); clip.add(q);
+});
+
+const parts = {base, column, cylBody, ram, crosshead, jawL, jawR, dieL, dieR, sleeve};
+Object.values(parts).forEach(m => { m.userData.home = m.position.clone(); scene.add(m); });
+scene.add(clip);
+
+// ---------- состояния страницы ----------
+const state = {u:0, prevU:0, cycles:0, cut:false, explode:false, auto:false, cycleT:0};
+
+function applyPose(){
+  const p = pose(state.u);
+  const ex = state.explode ? 1 : 0;
+
+  column.position.set(0, .175 + ex*.02, -.11 - ex*.05);
+  cylBody.position.set(0, .365 + ex*.03, -.11 - ex*.09);
+
+  // траверса идёт вниз на ход штока: 0,255 → 0,215
+  const chY = .255 - p.strokeMm / 1000;
+  ram.position.set(0, chY + .055, -.11 - ex*.02);
+  crosshead.position.set(0, chY + .02, -.11 - ex*.02);
+
+  // раскрытие пуансонов: полузазор = 6 мм + половина раскрытия
+  const half = .006 + (p.gapMm / 1000) / 2;
+  const zoneY = chY - .065;
+  jawL.position.set(-half - .0225, zoneY, -.075 + ex*.03);
+  jawR.position.set( half + .0225, zoneY, -.075 + ex*.03);
+  dieL.position.set(-half + .007, zoneY, -.075 + ex*.03);
+  dieR.position.set( half - .007, zoneY, -.075 + ex*.03);
+
+  // клипса зажимается между бойками — та же высота, что у зоны зажима
+  // клипса лежит горизонтально и обжимает оболочку: тот же центр, что у зоны зажима
+  clip.position.set(0, zoneY, -.015 + ex * .06);
+  clip.scale.setScalar(1 - .22 * p.close);
+  clip.rotation.set(Math.PI / 2, ex * .35, 0);
+
+  [base, column, cylBody].forEach(m => {
+    m.material.transparent = state.cut;
+    m.material.opacity = state.cut ? .26 : 1;
+  });
+
+  const q = (id, v) => { document.getElementById(id).textContent = v; };
+  q('v-stroke', p.strokeMm.toFixed(0) + ' мм');
+  q('v-gap', p.gapMm.toFixed(1).replace('.', ',') + ' мм');
+  q('v-force', p.forceKn.toFixed(1).replace('.', ',') + ' кН');
+  q('v-phase', p.phase);
+  q('v-cycle', String(state.cycles));
+}
+applyPose();
+
+// ---------- управление ----------
+const slider = document.getElementById('u');
+slider.addEventListener('input', () => {
+  state.u = +slider.value;
+  if (state.prevU > .9 && state.u < .1) state.cycles++;
+  state.prevU = state.u;
+  applyPose();
+});
+
+document.getElementById('cut').addEventListener('click', e => {
+  state.cut = !state.cut; e.target.classList.toggle('on', state.cut); applyPose();
+});
+document.getElementById('explode').addEventListener('click', e => {
+  state.explode = !state.explode; e.target.classList.toggle('on', state.explode); applyPose();
+});
+document.getElementById('auto').addEventListener('click', e => {
+  state.auto = !state.auto; e.target.classList.toggle('on', state.auto);
+  state.cycleT = 0;
+});
+
+// ---------- кадр ----------
+function render(t){
+  if (state.auto){
+    state.cycleT += 1/60;
+    const u = (state.cycleT % SPEC.cycleSec) / SPEC.cycleSec;
+    if (u < state.prevU) state.cycles++;
+    state.prevU = u;
+    state.u = u;
+    slider.value = u.toFixed(3);
+    applyPose();
+  }
+  camera.position.set(CAM.x + Math.sin(t * .00035) * .05, CAM.y, CAM.z + Math.cos(t * .00035) * .04);
+  camera.lookAt(LOOK);
+  renderer.render(scene, camera);
+}
+
+renderer.setAnimationLoop(render);
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
